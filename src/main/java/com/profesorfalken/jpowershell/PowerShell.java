@@ -129,11 +129,11 @@ public class PowerShell implements AutoCloseable {
 
         String powerShellExecutablePath = customPowerShellExecutablePath == null ? (OSDetector.isWindows() ? DEFAULT_WIN_EXECUTABLE : DEFAULT_LINUX_EXECUTABLE) : customPowerShellExecutablePath;
 
-        return powerShell.initalize(powerShellExecutablePath);
+        return powerShell.initialize(powerShellExecutablePath);
     }
 
     // Initializes PowerShell console in which we will enter the commands
-    private PowerShell initalize(String powerShellExecutablePath) throws PowerShellNotAvailableException {
+    private PowerShell initialize(String powerShellExecutablePath) throws PowerShellNotAvailableException {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         ProcessBuilder pb;
 
@@ -151,12 +151,7 @@ public class PowerShell implements AutoCloseable {
         try {
             //Launch process
             p = pb.start();
-
-            if (p.waitFor(5, TimeUnit.SECONDS) && !p.isAlive()) {
-                throw new PowerShellNotAvailableException(
-                        "Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
-            }
-        } catch (IOException | InterruptedException ex) {
+        } catch (IOException ex) {
             throw new PowerShellNotAvailableException(
                     "Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
         }
@@ -169,6 +164,11 @@ public class PowerShell implements AutoCloseable {
 
         //Get and store the PID of the process
         this.pid = getPID();
+
+        if (!p.isAlive()) {
+            throw new PowerShellNotAvailableException(
+                    "Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
+        }
 
         return this;
     }
@@ -208,7 +208,7 @@ public class PowerShell implements AutoCloseable {
                     result.cancel(true);
                 }
             }
-        } catch (InterruptedException | ExecutionException ex) {
+        } catch (InterruptedException | ExecutionException | CancellationException ex) {
             logger.log(Level.SEVERE,
                     "Unexpected error when processing PowerShell command", ex);
             isError = true;

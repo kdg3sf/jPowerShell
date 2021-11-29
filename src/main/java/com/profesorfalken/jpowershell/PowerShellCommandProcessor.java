@@ -62,7 +62,7 @@ class PowerShellCommandProcessor implements Callable<String> {
      * @return String output of call
      * @throws InterruptedException error when reading data
      */
-    public String call() throws InterruptedException {
+    public String call() throws InterruptedException, IOException {
         StringBuilder powerShellOutput = new StringBuilder();
 
         try {
@@ -70,8 +70,8 @@ class PowerShellCommandProcessor implements Callable<String> {
                 readData(powerShellOutput);
             }
         } catch (IOException ioe) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
-            return ioe.getMessage();
+            Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
+            throw ioe;
         }
 
         //Remove last CRLF from result
